@@ -2,7 +2,7 @@
 
 void main()
 {
-	char path[] = "D:\\desktop\\ µ—È\\∑¥±‡“Î\\Project1.exe";
+	char path[] = "pe_path";
 	OpenPeFiles(path);
 	readDLL();
 }
