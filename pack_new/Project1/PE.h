@@ -2,31 +2,31 @@
 #include<Psapi.h>
 #include"../Dll1/dllmain.h"
 
-HANDLE		hPEfile;	//PEÎÄ¼ş¾ä±ú
-LPBYTE		PEfileBuf;  //PEÎÄ¼ş»º³åÇø
-DWORD		PEsize;     //PEÎÄ¼ş´óĞ¡
-DWORD		ImageBase;  //¾µÏñ»ùÖ·
-DWORD		ImageSize;  //¾µÏñ´óĞ¡
-PIMAGE_DOS_HEADER		pDOSheader;  //DOSÍ·
-PIMAGE_NT_HEADERS		pNTheader;   //NTÍ·
-PIMAGE_SECTION_HEADER	pSECheader;  //µÚÒ»¸ösectionÖ¸Õë
-DWORD		PEoep;		//Ô­PEÈë¿Úµã
-DWORD		DLLoep;   //DLLµÄÈë¿Úµã£¬¼´ĞÂPEµÄÈë¿Úµã
-DWORD		SecNum;     //Çø¶ÎÊıÁ¿
-DWORD		AliMent;    //ÄÚ´æ¶ÔÆë
-DWORD		FileAlign;  //ÎÄ¼ş¶ÔÆë
+HANDLE		hPEfile;	//PEæ–‡ä»¶å¥æŸ„
+LPBYTE		PEfileBuf;  //PEæ–‡ä»¶ç¼“å†²åŒº
+DWORD		PEsize;     //PEæ–‡ä»¶å¤§å°
+DWORD		ImageBase;  //é•œåƒåŸºå€
+DWORD		ImageSize;  //é•œåƒå¤§å°
+PIMAGE_DOS_HEADER		pDOSheader;  //DOSå¤´
+PIMAGE_NT_HEADERS		pNTheader;   //NTå¤´
+PIMAGE_SECTION_HEADER	pSECheader;  //ç¬¬ä¸€ä¸ªsectionæŒ‡é’ˆ
+DWORD		PEoep;		//åŸPEå…¥å£ç‚¹
+DWORD		DLLoep;   //DLLçš„å…¥å£ç‚¹ï¼Œå³æ–°PEçš„å…¥å£ç‚¹
+DWORD		SecNum;     //åŒºæ®µæ•°é‡
+DWORD		AliMent;    //å†…å­˜å¯¹é½
+DWORD		FileAlign;  //æ–‡ä»¶å¯¹é½
 
-HMODULE hDLL;			//DLL¾ä±ú
-PBYTE DLLbuf;			//DLL»º³åÇø
+HMODULE hDLL;			//DLLå¥æŸ„
+PBYTE DLLbuf;			//DLLç¼“å†²åŒº
 
-//»ñÈ¡PE¸÷ĞÅÏ¢
+//è·å–PEå„ä¿¡æ¯
 void GetPEinfo()
 {
 	PEsize = GetFileSize(hPEfile, NULL);
 	
 	PEfileBuf = new BYTE[PEsize];
 	DWORD ReadSize = 0;
-	ReadFile(hPEfile, PEfileBuf, PEsize, &ReadSize, NULL);//¿½±´PEÎÄ¼şµ½»º³åÇø
+	ReadFile(hPEfile, PEfileBuf, PEsize, &ReadSize, NULL);//æ‹·è´PEæ–‡ä»¶åˆ°ç¼“å†²åŒº
 	CloseHandle(hPEfile);
 
 	pDOSheader = (PIMAGE_DOS_HEADER)PEfileBuf;
@@ -39,7 +39,7 @@ void GetPEinfo()
 	FileAlign = pNTheader->OptionalHeader.FileAlignment;
 }
 
-//Á£¶È¶ÔÆë´¦Àí
+//ç²’åº¦å¯¹é½å¤„ç†
 void Align()
 {
 	AliMent = pNTheader->OptionalHeader.SectionAlignment;
@@ -47,7 +47,7 @@ void Align()
 		ImageBase = (ImageBase / AliMent + 1) * AliMent;
 }
 
-//OEPÉèÖÃ
+//OEPè®¾ç½®
 void SetOep()
 {
 	pNTheader->OptionalHeader.AddressOfEntryPoint = DLLoep + ImageSize;
@@ -55,25 +55,25 @@ void SetOep()
 
 
 
-//½«DLLÊı¾İ¿½±´µ½PEÎÄ¼şºóÃæ
+//å°†DLLæ•°æ®æ‹·è´åˆ°PEæ–‡ä»¶åé¢
 void CopyBuf(LPBYTE DLLbuf, DWORD DLLSize, LPBYTE& pFinalBuf, DWORD& pFinalBufSize)
 {
-	//»ñÈ¡×îºóÒ»¸öÇø¶ÎµÄĞÅÏ¢
+	//è·å–æœ€åä¸€ä¸ªåŒºæ®µçš„ä¿¡æ¯
 	PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)PEfileBuf;
 	PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)(PEfileBuf + pDosHeader->e_lfanew);
 	PIMAGE_SECTION_HEADER pSectionHeader = IMAGE_FIRST_SECTION(pNtHeader);
 	PIMAGE_SECTION_HEADER pLastSection =
 		&pSectionHeader[pNtHeader->FileHeader.NumberOfSections - 1];
 
-	//1.ĞŞ¸ÄÇø¶ÎÊıÁ¿
+	//1.ä¿®æ”¹åŒºæ®µæ•°é‡
 	pNtHeader->FileHeader.NumberOfSections += 1;
 
-	//2.±à¼­Çø¶Î±íÍ·½á¹¹ÌåĞÅÏ¢
+	//2.ç¼–è¾‘åŒºæ®µè¡¨å¤´ç»“æ„ä½“ä¿¡æ¯
 	PIMAGE_SECTION_HEADER AddSectionHeader =
 		&pSectionHeader[pNtHeader->FileHeader.NumberOfSections - 1];
 	memcpy_s(AddSectionHeader->Name, 8, ".ddjsq", 7);
 
-	//VOffset(1000¶ÔÆë)
+	//VOffset(1000å¯¹é½)
 	DWORD dwTemp = 0;
 	dwTemp = (pLastSection->Misc.VirtualSize / AliMent) * AliMent;
 	if (pLastSection->Misc.VirtualSize % AliMent)
@@ -82,13 +82,13 @@ void CopyBuf(LPBYTE DLLbuf, DWORD DLLSize, LPBYTE& pFinalBuf, DWORD& pFinalBufSi
 	}
 	AddSectionHeader->VirtualAddress = pLastSection->VirtualAddress + dwTemp;
 
-	//Vsize£¨Êµ¼ÊÌí¼ÓµÄ´óĞ¡£©
+	//Vsizeï¼ˆå®é™…æ·»åŠ çš„å¤§å°ï¼‰
 	AddSectionHeader->Misc.VirtualSize = DLLSize;
 
-	//ROffset£¨¾ÉÎÄ¼şµÄÄ©Î²£©
+	//ROffsetï¼ˆæ—§æ–‡ä»¶çš„æœ«å°¾ï¼‰
 	AddSectionHeader->PointerToRawData = ImageSize;
 
-	//RSize(200¶ÔÆë)
+	//RSize(200å¯¹é½)
 	dwTemp = (DLLSize / FileAlign) * FileAlign;
 	if (DLLSize % FileAlign)
 	{
@@ -96,10 +96,10 @@ void CopyBuf(LPBYTE DLLbuf, DWORD DLLSize, LPBYTE& pFinalBuf, DWORD& pFinalBufSi
 	}
 	AddSectionHeader->SizeOfRawData = dwTemp;
 
-	//±êÖ¾
+	//æ ‡å¿—
 	AddSectionHeader->Characteristics = 0XE00000E0;
 
-	//3.ĞŞ¸ÄPEÍ·ÎÄ¼ş´óĞ¡ÊôĞÔ£¬Ôö¼ÓÎÄ¼ş´óĞ¡
+	//3.ä¿®æ”¹PEå¤´æ–‡ä»¶å¤§å°å±æ€§ï¼Œå¢åŠ æ–‡ä»¶å¤§å°
 	dwTemp = (DLLSize / AliMent) * AliMent;
 	if (DLLSize % AliMent)
 	{
@@ -108,7 +108,7 @@ void CopyBuf(LPBYTE DLLbuf, DWORD DLLSize, LPBYTE& pFinalBuf, DWORD& pFinalBufSi
 	pNtHeader->OptionalHeader.SizeOfImage += dwTemp;
 
 
-	//4.ÉêÇëºÏ²¢ËùĞèÒªµÄ¿Õ¼ä
+	//4.ç”³è¯·åˆå¹¶æ‰€éœ€è¦çš„ç©ºé—´
 	pFinalBuf = new BYTE[ImageSize + dwTemp];
 	pFinalBufSize = ImageSize + dwTemp;
 	memset(pFinalBuf, 0, ImageSize + dwTemp);
@@ -116,20 +116,20 @@ void CopyBuf(LPBYTE DLLbuf, DWORD DLLSize, LPBYTE& pFinalBuf, DWORD& pFinalBufSi
 	memcpy_s(pFinalBuf + ImageSize, dwTemp, DLLbuf, dwTemp);
 }
 
-//ĞŞ¸´DLLÖØ¶¨Î»
+//ä¿®å¤DLLé‡å®šä½
 BOOL SetShellReloc(LPBYTE pShellBuf, DWORD hShell)
 {
 	typedef struct _TYPEOFFSET
 	{
-		WORD offset : 12;			//Æ«ÒÆÖµ
-		WORD Type : 4;			//ÖØ¶¨Î»ÊôĞÔ(·½Ê½)
+		WORD offset : 12;			//åç§»å€¼
+		WORD Type : 4;			//é‡å®šä½å±æ€§(æ–¹å¼)
 	}TYPEOFFSET, * PTYPEOFFSET;
 
-	//1.»ñÈ¡±»¼Ó¿ÇPEÎÄ¼şµÄÖØ¶¨Î»Ä¿Â¼±íÖ¸ÕëĞÅÏ¢
+	//1.è·å–è¢«åŠ å£³PEæ–‡ä»¶çš„é‡å®šä½ç›®å½•è¡¨æŒ‡é’ˆä¿¡æ¯
 	PIMAGE_DATA_DIRECTORY pPERelocDir =
 		&(pNTheader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC]);
 
-	//2.»ñÈ¡ShellµÄÖØ¶¨Î»±íÖ¸ÕëĞÅÏ¢
+	//2.è·å–Shellçš„é‡å®šä½è¡¨æŒ‡é’ˆä¿¡æ¯
 	PIMAGE_DOS_HEADER		pShellDosHeader = (PIMAGE_DOS_HEADER)pShellBuf;
 	PIMAGE_NT_HEADERS		pShellNtHeader = (PIMAGE_NT_HEADERS)(pShellBuf + pShellDosHeader->e_lfanew);
 	PIMAGE_DATA_DIRECTORY	pShellRelocDir =
@@ -137,9 +137,9 @@ BOOL SetShellReloc(LPBYTE pShellBuf, DWORD hShell)
 	PIMAGE_BASE_RELOCATION	pShellReloc =
 		(PIMAGE_BASE_RELOCATION)((DWORD)pShellBuf + pShellRelocDir->VirtualAddress);
 
-	//3.»¹Ô­ĞŞ¸´ÖØ¶¨Î»ĞÅÏ¢
-	//ÓÉÓÚShell.dllÊÇÍ¨¹ıLoadLibrary¼ÓÔØµÄ£¬ËùÒÔÏµÍ³»á¶ÔÆä½øĞĞÒ»´ÎÖØ¶¨Î»
-	//ÎÒÃÇĞèÒª°ÑShell.dllµÄÖØ¶¨Î»ĞÅÏ¢»Ö¸´µ½ÏµÍ³Ã»¼ÓÔØÇ°µÄÑù×Ó£¬È»ºóÔÚĞ´Èë±»¼Ó¿ÇÎÄ¼şµÄÄ©Î²
+	//3.è¿˜åŸä¿®å¤é‡å®šä½ä¿¡æ¯
+	//ç”±äºShell.dllæ˜¯é€šè¿‡LoadLibraryåŠ è½½çš„ï¼Œæ‰€ä»¥ç³»ç»Ÿä¼šå¯¹å…¶è¿›è¡Œä¸€æ¬¡é‡å®šä½
+	//æˆ‘ä»¬éœ€è¦æŠŠShell.dllçš„é‡å®šä½ä¿¡æ¯æ¢å¤åˆ°ç³»ç»Ÿæ²¡åŠ è½½å‰çš„æ ·å­ï¼Œç„¶ååœ¨å†™å…¥è¢«åŠ å£³æ–‡ä»¶çš„æœ«å°¾
 	PTYPEOFFSET pTypeOffset = (PTYPEOFFSET)(pShellReloc + 1);
 	DWORD dwNumber = (pShellReloc->SizeOfBlock - 8) / 2;
 
@@ -149,16 +149,16 @@ BOOL SetShellReloc(LPBYTE pShellBuf, DWORD hShell)
 			break;
 		//RVA
 		DWORD dwRVA = pTypeOffset[i].offset + pShellReloc->VirtualAddress;
-		//FARµØÖ·£¨LordPEÖĞÕâÑù±ê×¢£©
-		//***ĞÂµÄÖØ¶¨Î»µØÖ·=ÖØ¶¨Î»ºóµÄµØÖ·-¼ÓÔØÊ±µÄ¾µÏñ»ùÖ·+ĞÂµÄ¾µÏñ»ùÖ·+´úÂë»ùÖ·(PEÎÄ¼ş¾µÏñ´óĞ¡)
+		//FARåœ°å€ï¼ˆLordPEä¸­è¿™æ ·æ ‡æ³¨ï¼‰
+		//***æ–°çš„é‡å®šä½åœ°å€=é‡å®šä½åçš„åœ°å€-åŠ è½½æ—¶çš„é•œåƒåŸºå€+æ–°çš„é•œåƒåŸºå€+ä»£ç åŸºå€(PEæ–‡ä»¶é•œåƒå¤§å°)
 		DWORD AddrOfNeedReloc = *(PDWORD)((DWORD)pShellBuf + dwRVA);
 		*(PDWORD)((DWORD)pShellBuf + dwRVA)
 			= AddrOfNeedReloc - pShellNtHeader->OptionalHeader.ImageBase + ImageBase + ImageSize;
 	}
-	//3.1ĞŞ¸ÄShellÖØ¶¨Î»±íÖĞ.textµÄRVA
+	//3.1ä¿®æ”¹Shellé‡å®šä½è¡¨ä¸­.textçš„RVA
 	pShellReloc->VirtualAddress += ImageSize;
 
-	//4.ĞŞ¸ÄPEÖØ¶¨Î»Ä¿Â¼Ö¸Õë£¬Ö¸ÏòShellµÄÖØ¶¨Î»±íĞÅÏ¢
+	//4.ä¿®æ”¹PEé‡å®šä½ç›®å½•æŒ‡é’ˆï¼ŒæŒ‡å‘Shellçš„é‡å®šä½è¡¨ä¿¡æ¯
 	pPERelocDir->Size = pShellRelocDir->Size;
 	pPERelocDir->VirtualAddress = pShellRelocDir->VirtualAddress + ImageSize;
 
@@ -167,7 +167,7 @@ BOOL SetShellReloc(LPBYTE pShellBuf, DWORD hShell)
 
 BOOL SaveFile(LPBYTE pFinalBuf, DWORD pFinalBufSize)
 {
-	//ĞŞÕıÇø¶ÎĞÅÏ¢ÖĞ ÎÄ¼ş¶ÔÆë´óĞ¡£¨ÎÄ¼ş¶ÔÆë´óĞ¡Í¬ÄÚ´æ¶ÔÆë´óĞ¡£©
+	//ä¿®æ­£åŒºæ®µä¿¡æ¯ä¸­ æ–‡ä»¶å¯¹é½å¤§å°ï¼ˆæ–‡ä»¶å¯¹é½å¤§å°åŒå†…å­˜å¯¹é½å¤§å°ï¼‰
 	/*PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)pFinalBuf;
 	PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)(pFinalBuf + pDOSheader->e_lfanew);
 	PIMAGE_SECTION_HEADER pSectionHeader = IMAGE_FIRST_SECTION(pNtHeader);
@@ -176,8 +176,8 @@ BOOL SaveFile(LPBYTE pFinalBuf, DWORD pFinalBufSize)
 		pSectionHeader->PointerToRawData = pSectionHeader->VirtualAddress;
 	}*/
 
-	//Çå³ı²»ĞèÒªµÄÄ¿Â¼±íĞÅÏ¢
-	//Ö»ÁôÊä³ö±í£¬ÖØ¶¨Î»±í£¬×ÊÔ´±í
+	//æ¸…é™¤ä¸éœ€è¦çš„ç›®å½•è¡¨ä¿¡æ¯
+	//åªç•™è¾“å‡ºè¡¨ï¼Œé‡å®šä½è¡¨ï¼Œèµ„æºè¡¨
 	/*DWORD dwCount = 15;
 	for (DWORD i = 0; i < dwCount; i++)
 	{
@@ -189,7 +189,7 @@ BOOL SaveFile(LPBYTE pFinalBuf, DWORD pFinalBufSize)
 			pNtHeader->OptionalHeader.DataDirectory[i].Size = 0;
 		}
 	}*/
-	char path[] = "D:\\desktop\\ÊµÑé\\·´±àÒë\\test_ddjsq.exe";
+	char path[] = "save_path";
 	HANDLE hFile = CreateFileA(
 		path,
 		GENERIC_WRITE,
@@ -205,7 +205,7 @@ BOOL SaveFile(LPBYTE pFinalBuf, DWORD pFinalBufSize)
 	return true;
 }
 
-//¶ÁÈ¡DLL
+//è¯»å–DLL
 void readDLL()
 {
 	hDLL = LoadLibrary(L"Dll1.dll");
@@ -227,7 +227,7 @@ void readDLL()
 	SaveFile(pFinalBuf, dwFinalBufSize);
 }
 
-//´ò¿ªPEÎÄ¼ş
+//æ‰“å¼€PEæ–‡ä»¶
 BOOL OpenPeFiles(const char* path)
 {
 	hPEfile = CreateFileA(path,
@@ -239,7 +239,7 @@ BOOL OpenPeFiles(const char* path)
 		NULL);
 	if (hPEfile == INVALID_HANDLE_VALUE)
 	{
-		//printf("´ò¿ªÎÄ¼şÊ§°Ü");
+		//printf("æ‰“å¼€æ–‡ä»¶å¤±è´¥");
 		return false;
 	}
 	GetPEinfo();
