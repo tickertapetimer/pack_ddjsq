@@ -1,0 +1,8 @@
+﻿  main.cpp
+D:\desktop\实验\反编译\pack_new\Project1\main.cpp(4,1): warning C4326: “main”的返回类型应为“int”而非“void”
+  正在生成代码
+  4 of 10 functions (40.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  已完成代码的生成
+  Project1.vcxproj -> D:\desktop\实验\反编译\pack_new\Project1\Release\Project1.exe
